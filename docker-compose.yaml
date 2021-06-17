@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+    db:
+        image: mysql:latest
+        ports:
+            - 3306:3306
+        command: [
+            '--default_authentication_plugin=mysql_native_password',
+            '--character-set-server=utf8mb4',
+            '--collation-server=utf8mb4_unicode_ci'
+        ]
+        volumes: 
+            - db_data:/var/lib/mysql
+        environment:
+            MYSQL_DATABASE: "${DB_NAME}"
+            MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+
+    pma:
+        depends_on:
+            - db
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - 8080:80
+        environment: 
+            MYSQL_DATABASE: "${DB_NAME}"
+            MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+
+    phpbb:
+        depends_on:
+            - db
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        links:
+            - db
+        ports:
+            - 80:80
+        volumes:
+            - ./config/php.conf.ini:/usr/local/etc/php/conf.d/conf.ini
+            - ./phpBB3:/var/www/html
+    
+volumes: 
+    db_data:
